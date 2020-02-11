@@ -35,31 +35,19 @@
       and no internal buffers for replaceable stream printing
 */
 
-#ifndef ARDUINO_STREAMING
-#define ARDUINO_STREAMING
+/*
+ * 6.1 changes
+ * - Add std::string support
+ *
+*/
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-#ifdef ARDUINO_ARCH_AVR
-// No stl library, so need trivial version of std::is_signed ...
-namespace std {
-template<typename T>
-  struct is_signed { static const bool value = false; };
-  template<>
-  struct is_signed<int8_t> { static const bool value = true; };
-  template<>
-  struct is_signed<int16_t> { static const bool value = true; };
-  template<>
-  struct is_signed<int32_t> { static const bool value = true; };
-};
-#else
+#pragma once
+
+#include <Arduino.h>
 #include <type_traits>
-#endif
+#include <string>
 
-#define STREAMING_LIBRARY_VERSION 6
+#define STREAMING_LIBRARY_VERSION 6_1
 
 #if !defined(typeof)
 #define typeof(x) __typeof__(x)
@@ -69,6 +57,12 @@ template<typename T>
 template<class T>
 inline Print &operator <<(Print &stream, T arg)
 { stream.print(arg); return stream; }
+
+// Allow streaming/logging of std::string objects
+inline Print &operator <<(Print &stream, const std::string& arg) {
+  stream.print(arg.c_str());
+  return stream;
+}
 
 template<typename T>
 struct _BASED
@@ -340,4 +334,3 @@ inline Print& operator <<(Print &stm, const __FMT<Ft, T, Ts...> &args)
 template<typename Ft, typename... Ts>
 __FMT<Ft, Ts...> _FMT(Ft format, Ts ... args) { return __FMT<Ft, Ts...>(format, args...); }
 
-#endif
